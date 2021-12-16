@@ -1,0 +1,61 @@
+name: PHPUnit
+
+on:
+  workflow_call:
+    secrets:
+      REPMAN_TOKEN:
+        required: true
+      NOVA_USERNAME:
+        required: true
+      NOVA_PASSWORD:
+        required: true
+
+jobs:
+  phpunit:
+    runs-on: self-hosted
+    container: setupphp/node:latest
+    strategy:
+      fail-fast: true
+      matrix:
+        php: [7.4]
+        laravel: [6.*]
+        include:
+          - laravel: 6.*
+            testbench: 5.*
+
+    name: PHP${{ matrix.php }} - Laravel${{ matrix.laravel }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          coverage: none
+
+      - name: Authenticate repman
+        env: # Or as an environment variable
+          REPMAN_TOKEN: ${{ secrets.REPMAN_TOKEN }}
+        run: composer config --global --auth http-basic.codedor.repo.repman.io token ${REPMAN_TOKEN}
+
+      - name: Login to Laravel Nova
+        run: composer config http-basic.nova.laravel.com ${NOVA_USERNAME} ${NOVA_PASSWORD}
+        env:
+          NOVA_USERNAME: ${{ secrets.NOVA_USERNAME }}
+          NOVA_PASSWORD: ${{ secrets.NOVA_PASSWORD }}
+
+      - name: Setup problem matchers
+        run: |
+          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+          echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
+          composer update --prefer-stable --prefer-dist --no-interaction
+
+      - name: Execute tests
+        run: vendor/bin/phpunit tests
