@@ -11,7 +11,7 @@ on: [pull_request, workflow_dispatch]
 
 jobs:
   call-style:
-    uses: codedor/workflows/.github/workflows/style.yml@v0
+    uses: codedor/workflows/.github/workflows/style.yml@master
 ```
 
 ### PHPUnit
@@ -25,7 +25,7 @@ on: [pull_request]
 
 jobs:
   call-style:
-    uses: codedor/workflows/.github/workflows/phpunit-l8.yml@v0
+    uses: codedor/workflows/.github/workflows/phpunit-l8.yml@master
     secrets:
       REPMAN_TOKEN: ${{ secrets.REPMAN_TOKEN }}
       NOVA_USERNAME: ${{ secrets.NOVA_USERNAME }}
