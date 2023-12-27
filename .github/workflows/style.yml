@@ -4,8 +4,7 @@ on: workflow_call
 
 jobs:
   php-cs-fixer:
-    runs-on: self-hosted
-    container: setupphp/node:latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
